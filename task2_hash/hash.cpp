@@ -19,8 +19,8 @@ bool check_bits(const unsigned char* hash, const unsigned int hash_len, int bits
 
     // Iterate over bytes, if there are still bytes to check:
     while (bits > 0) {
-        // If more than 8 bits to check, check the whole byte
-        if (bits > 8) {
+        // If more than 7 bits to check, check the whole byte
+        if (bits >= 8) {
             if (hash[byte_pos] != 0)
                 return false;
             bits -= 8;
