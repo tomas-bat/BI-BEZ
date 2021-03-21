@@ -5,13 +5,15 @@
 
 #include <cstdio>
 #include <random>
+#include <bitset>
+#include <stdexcept>
 #include <openssl/evp.h>
 using namespace std;
 
 const static int TEXT_MAX_SIZE = 20;
 const static int LUCKY_NUMBER = 8; // some extra space in char arrays, must be at least 1 for '\0'
 
-bool check_bits(const unsigned char* hash, const unsigned int hash_len, int bits) {
+bool check_bits(const unsigned char* hash, const unsigned int hash_len, unsigned int bits) {
     if (bits > hash_len*8)
         throw invalid_argument("check_bits argument error: trying to check more bits than available");
 
@@ -28,7 +30,7 @@ bool check_bits(const unsigned char* hash, const unsigned int hash_len, int bits
         // Check the given number of bits:
         else {
             bitset<8> byte(hash[byte_pos]);
-            for (int i = 0; i < bits; i++) {
+            for (unsigned int i = 0; i < bits; i++) {
                 if (byte.test(7-i))
                     return false;
             }
@@ -41,8 +43,8 @@ bool check_bits(const unsigned char* hash, const unsigned int hash_len, int bits
 
 int main (int argc, char* argv[]) {
 
-    int bits;
-    if (argc != 2 || sscanf(argv[1], "%d", &bits) != 1) {
+    unsigned int bits;
+    if (argc != 2 || sscanf(argv[1], "%u", &bits) != 1) {
         printf("usage: %s number_of_bits\n", argv[0]);
         return 1;
     } else if (bits > 384 || bits < 0) {
