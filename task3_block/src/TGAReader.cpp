@@ -5,25 +5,31 @@
 #include <fstream>
 #include <iostream>
 #include <cstdio>
-#include "AESEncryptor.hpp"
+
+#include "TGAReader.hpp"
+
 using namespace std;
 
-bool AESEncryptor::load_tga_file(const std::string& filename) {
-    printf("ENCRYPTOR: Loading file %s...\n", filename.c_str());
+int TGAReader::get_size_of_tga_header(const std::string& filename) {
+    printf("TGA Reader: Loading file %s...\n", filename.c_str());
     ifstream input(filename);
     if (!input)
-        return false;
+        return -1;
+
+    int skip_count = 0;
 
     // OFFSET: 0, LENGTH: 1
     // Number of Characters in Identification Field. (1B)
     char c;
     input.read(&c, 1);
+    skip_count += 1;
     auto n_characters_in_identification_field = (unsigned char)c;
 
     printf("DEBUG: Number of characters in identification field: %d\n", n_characters_in_identification_field);
 
     // skip to position 3
     input.ignore(2);
+    skip_count += 2;
 
     // OFFSET: 3, LENGHT: 5
     // Color Map Specification.
@@ -32,6 +38,7 @@ bool AESEncryptor::load_tga_file(const std::string& filename) {
     // 7:   Number of bits in each color map entry. (1B)
     char color_map_type[5];
     input.read(color_map_type, 5);
+    skip_count += 5;
     int idx_first_color_map_entry = (unsigned char)color_map_type[1] << 8 | (unsigned char)color_map_type[0];
     int color_map_length = (unsigned char)color_map_type[3] << 8 | (unsigned char)color_map_type[2];
     int n_bits_in_each_color_map_entry = (unsigned char)color_map_type[4];
@@ -42,6 +49,7 @@ bool AESEncryptor::load_tga_file(const std::string& filename) {
 
     // skip to position 12
     input.ignore(4);
+    skip_count += 4;
 
     // OFFSET: 8, LENGHT: 10
     // Image Specification.
@@ -49,25 +57,24 @@ bool AESEncryptor::load_tga_file(const std::string& filename) {
     // 14-15: Height (2B, little endian)
     char size_buff[2];
     input.read(size_buff, 2);
+    skip_count += 2;
     int size = (unsigned char)size_buff[1] << 8 | (unsigned char)size_buff[0];
     printf("- Width: %d\n", size);
 
     input.read(size_buff, 2);
+    skip_count += 2;
     size = (unsigned char)size_buff[1] << 8 | (unsigned char)size_buff[0];
     printf("- Height: %d\n", size);
 
 
     // skip to position 18
-    input.ignore(3);
+    input.ignore(2);
+    skip_count += 2;
 
     // skip identification field
     input.ignore(n_characters_in_identification_field);
+    skip_count += n_characters_in_identification_field;
 
-
-
-    return false;
-}
-
-bool AESEncryptor::encrypt(const std::string& op_mode) {
-    return false;
+    printf("DEBUG: Skip count: %d\n", skip_count);
+    return skip_count;
 }

@@ -2,6 +2,7 @@ UNAME_S=$(shell uname -s)
 
 EXECUTABLE=task3
 BUILD_DIR=build
+SOURCE_DIR=src
 
 CXX=g++
 LD=g++
@@ -15,14 +16,17 @@ endif
 
 all: $(EXECUTABLE)
 
+deps:
+	g++ -MM *.cpp > Makefile.d
+
 .PHONY: test
 test: $(EXECUTABLE)
 	./$(EXECUTABLE) -e ecb obrazek_tga/Mad_scientist.tga
 
-$(EXECUTABLE): $(BUILD_DIR)/block.o $(BUILD_DIR)/AESEncryptor.o $(BUILD_DIR)/AESDecryptor.o
+$(EXECUTABLE): $(BUILD_DIR)/block.o $(BUILD_DIR)/AESEncryptor.o $(BUILD_DIR)/AESDecryptor.o $(BUILD_DIR)/TGAReader.o
 	$(LD) -o $(EXECUTABLE) $^ $(LD_FLAGS)
 
-$(BUILD_DIR)/%.o: %.cpp
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
 	mkdir -p $(BUILD_DIR)
 	$(CXX) -c -o $@ $< $(CXX_FLAGS)
 
@@ -31,6 +35,4 @@ clean:
 	rm -rf $(EXECUTABLE) $(BUILD_DIR)
 
 # Dependencies:
-AESDecryptor.o: AESDecryptor.cpp AESDecryptor.hpp
-AESEnryptor.o: AESEncryptor.cpp AESEncryptor.hpp
-block.o: block.cpp AESDecryptor.hpp AESEncryptor.hpp
+-include Makefile.d

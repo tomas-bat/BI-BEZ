@@ -16,6 +16,7 @@ public:
 private:
     __unused bool        m_file_loaded = false;
     __unused std::string m_filename;
+    __unused int         m_skip_count;
 };
 
 
