@@ -31,12 +31,19 @@ int main(int argc, char** argv) {
     }
 
     if (mode == "-e") {
-        // encrypt...
+        AESEncryptor encryptor;
+        if (!encryptor.load_tga_file(file_name)) {
+            cerr << "ERROR: Failed loading file: " << file_name << endl;
+            return 2;
+        }
+        if (!encryptor.encrypt(op_mode)) {
+            cerr << "ERROR: Failed encrypting file." << endl;
+            return 3;
+        }
+
     } else {
         // decrypt...
     }
-
-
 
     return 0;
 }
