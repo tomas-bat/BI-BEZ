@@ -35,4 +35,9 @@ clean:
 	rm -rf $(EXECUTABLE) $(BUILD_DIR)
 
 # Dependencies:
--include Makefile.d
+# -include Makefile.d
+AESDecryptor.o: src/AESDecryptor.cpp src/AESDecryptor.hpp
+AESEncryptor.o: src/AESEncryptor.cpp src/AESEncryptor.hpp \
+  src/TGAReader.hpp
+TGAReader.o: src/TGAReader.cpp src/TGAReader.hpp
+block.o: src/block.cpp src/AESDecryptor.hpp src/AESEncryptor.hpp
