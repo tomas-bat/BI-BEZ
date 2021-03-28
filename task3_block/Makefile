@@ -15,8 +15,8 @@ endif
 
 all: $(EXECUTABLE)
 
-$(EXECUTABLE): $(BUILD_DIR)/block.o
-	$(LD) -o $(EXECUTABLE) $< $(LD_FLAGS)
+$(EXECUTABLE): $(BUILD_DIR)/block.o $(BUILD_DIR)/AESEncryptor.o $(BUILD_DIR)/AESDecryptor.o
+	$(LD) -o $(EXECUTABLE) $^ $(LD_FLAGS)
 
 $(BUILD_DIR)/%.o: %.cpp
 	mkdir -p $(BUILD_DIR)
@@ -25,4 +25,8 @@ $(BUILD_DIR)/%.o: %.cpp
 .PHONY: clean
 clean:
 	rm -rf $(EXECUTABLE) $(BUILD_DIR)
-	
+
+# Dependencies:
+AESDecryptor.o: AESDecryptor.cpp AESDecryptor.hpp
+AESEnryptor.o: AESEncryptor.cpp AESEncryptor.hpp
+block.o: block.cpp AESDecryptor.hpp AESEncryptor.hpp
