@@ -12,6 +12,8 @@ class AESEncryptor {
 public:
     bool load_tga_file(const std::string& filename);
 
+    static void random_128_key(unsigned char* key);
+
     bool encrypt(const std::string& op_mode);
 private:
     __unused bool        m_file_loaded = false;
