@@ -4,12 +4,14 @@ EXECUTABLE=task3
 BUILD_DIR=build
 SOURCE_DIR=src
 
+OPENSSL_DIR=/opt/homebrew/opt/openssl@1.1
+
 CXX=g++
 LD=g++
-CXX_FLAGS=-Wall -pedantic -std=c++14 -O2 -g -fsanitize=address
+CXX_FLAGS=-Wall -pedantic -std=c++14 -O2
 
 ifeq ($(UNAME_S), Darwin) # macOS
-LD_FLAGS=-L/opt/homebrew/opt/openssl@1.1/lib -I/opt/homebrew/opt/openssl@1.1/include -lcrypto -g -fsanitize=address
+LD_FLAGS=-L$(OPENSSL_DIR)/lib -I$(OPENSSL_DIR)/include -lcrypto
 else # Linux
 LD_FLAGS=-lcrypto
 endif
