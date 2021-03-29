@@ -30,13 +30,18 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    unsigned char key[16];
+    unsigned char iv[16];
+    AESEncryptor::random_128_key(key);
+    AESEncryptor::random_128_key(iv);
+
     if (mode == "-e") {
         AESEncryptor encryptor;
         if (!encryptor.load_tga_file(file_name)) {
             cerr << "ERROR: Failed loading file: " << file_name << endl;
             return 2;
         }
-        if (!encryptor.encrypt(op_mode)) {
+        if (!encryptor.encrypt(op_mode, key, iv)) {
             cerr << "ERROR: Failed encrypting file." << endl;
             return 3;
         }

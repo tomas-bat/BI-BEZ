@@ -75,6 +75,10 @@ int TGAReader::get_size_of_tga_header(const std::string& filename) {
     input.ignore(n_characters_in_identification_field);
     skip_count += n_characters_in_identification_field;
 
+    if (input.fail())
+        return false;
+    input.close();
+
     printf("DEBUG: Skip count: %d\n", skip_count);
     return skip_count;
 }

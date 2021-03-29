@@ -6,6 +6,9 @@
 #define TASK3_BLOCK_AESENCRYPTOR_HPP
 
 #include <string>
+#include <openssl/evp.h>
+
+const static int BUFFER_SIZE = 1024;
 
 
 class AESEncryptor {
@@ -14,11 +17,14 @@ public:
 
     static void random_128_key(unsigned char* key);
 
-    bool encrypt(const std::string& op_mode);
+    bool encrypt(const std::string& op_mode, const unsigned char* key, const unsigned char* iv);
 private:
-    __unused bool        m_file_loaded = false;
-    __unused std::string m_filename;
-    __unused int         m_skip_count;
+    bool        m_file_loaded = false;
+    std::string m_filename;
+    int         m_skip_count;
+
+    bool encrypt_buffer(const std::string& op_mode, EVP_CIPHER_CTX* ctx, const unsigned char* buff,
+                        unsigned char* encrypted_buff, const unsigned char* key, int buff_len, const unsigned char* iv);
 };
 
 
