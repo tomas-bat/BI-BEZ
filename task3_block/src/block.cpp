@@ -1,6 +1,6 @@
 #include <iostream>
-#include <fstream>
 #include <string>
+#include <algorithm>
 
 #include "AESDecryptor.hpp"
 #include "AESEncryptor.hpp"
@@ -36,7 +36,6 @@ int main(int argc, char** argv) {
     AESEncryptor::static_128_key(iv);
 
     if (mode == "-e") {
-        cout << "=== Encrypting file " << file_name << "... ===" << endl;
         AESEncryptor encryptor;
         if (!encryptor.load_tga_file(file_name)) {
             cerr << "ERROR: Failed loading file: " << file_name << endl;
@@ -46,10 +45,7 @@ int main(int argc, char** argv) {
             cerr << "ERROR: Failed encrypting file." << endl;
             return 3;
         }
-        cout << "=== Encryption successful! ===" << endl;
-
     } else {
-        cout << "=== Decrypting file " << file_name << "... ===" << endl;
         AESDecryptor decryptor;
         if (!decryptor.load_encrypted_tga_file(file_name)) {
             cerr << "ERROR: Failed loading file: " << file_name << endl;
@@ -59,7 +55,6 @@ int main(int argc, char** argv) {
             cerr << "ERROR: Failed decrypting file." << endl;
             return 3;
         }
-        cout << "=== Decryption successful! ===" << endl;
     }
 
     return 0;

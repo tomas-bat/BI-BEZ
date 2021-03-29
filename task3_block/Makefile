@@ -13,7 +13,7 @@ CXX_FLAGS=-Wall -pedantic -std=c++14 -O2
 ifeq ($(UNAME_S), Darwin) # macOS
 LD_FLAGS=-L$(MACOS_OPENSSL_DIR)/lib -I$(MACOS_OPENSSL_DIR)/include -lcrypto
 else # Linux
-LD_FLAGS=-lcrypto
+LD_FLAGS=-lcrypto -g
 endif
 
 all: $(EXECUTABLE)
@@ -23,11 +23,10 @@ deps:
 
 .PHONY: test
 test: $(EXECUTABLE)
-	rm -f obrazek_tga/*_cbc.tga obrazek_tga/*_dec.tga && \
+	rm -f obrazek_tga/Mad_scientist_cbc.tga obrazek_tga/Mad_scientist_cbc_dec.tga && \
 	./$(EXECUTABLE) -e cbc obrazek_tga/Mad_scientist.tga && \
-	./$(EXECUTABLE) -d cbc obrazek_tga/Mad_scientist.tga_cbc.tga && \
-	diff obrazek_tga/Mad_scientist.tga obrazek_tga/Mad_scientist.tga_cbc.tga_dec.tga && \
-	echo "<<< Diff successful >>>"
+	./$(EXECUTABLE) -d cbc obrazek_tga/Mad_scientist_cbc.tga && \
+	diff obrazek_tga/Mad_scientist.tga obrazek_tga/Mad_scientist_cbc_dec.tga
 
 $(EXECUTABLE): $(BUILD_DIR)/block.o $(BUILD_DIR)/AESEncryptor.o $(BUILD_DIR)/AESDecryptor.o $(BUILD_DIR)/TGAReader.o
 	$(LD) -o $(EXECUTABLE) $^ $(LD_FLAGS)

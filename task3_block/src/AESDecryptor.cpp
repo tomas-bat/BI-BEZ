@@ -4,6 +4,7 @@
 
 #include <string>
 #include <fstream>
+#include <iostream>
 
 #include "AESDecryptor.hpp"
 #include "TGAReader.hpp"
@@ -23,14 +24,19 @@ bool AESDecryptor::load_encrypted_tga_file(const std::string& filename) {
 }
 
 bool AESDecryptor::decrypt(const std::string& op_mode, const unsigned char* key, const unsigned char* iv) {
+    cout << "=== Decrypting file " << m_filename << "... ===" << endl;
+
     if (!m_file_loaded)
         return false;
 
+    size_t last_dot = m_filename.find_last_of('.');
+    string raw_name = m_filename.substr(0, last_dot);
+
     string new_filename;
     if (op_mode == "ECB")
-        new_filename = m_filename + "_dec.tga";
+        new_filename = raw_name + "_dec.tga";
     else
-        new_filename = m_filename + "_dec.tga";
+        new_filename = raw_name + "_dec.tga";
 
     ofstream out_file(new_filename);
     ifstream in_file(m_filename);
@@ -40,6 +46,7 @@ bool AESDecryptor::decrypt(const std::string& op_mode, const unsigned char* key,
     char* header_buff = new char[m_skip_count];
     in_file.read(header_buff, m_skip_count);
     out_file.write(header_buff, m_skip_count);
+    delete [] header_buff;
 
 
 
@@ -59,8 +66,13 @@ bool AESDecryptor::decrypt(const std::string& op_mode, const unsigned char* key,
         out_file.write(decrypted_buff, bytes_read);
     }
 
+    delete [] file_buff;
+    delete [] decrypted_buff;
+
     /* Clean up */
     EVP_CIPHER_CTX_free(ctx);
+
+    cout << "=== Decryption successful! (" << new_filename << ") ===" << endl;
 
     return true;
 }
@@ -68,7 +80,7 @@ bool AESDecryptor::decrypt(const std::string& op_mode, const unsigned char* key,
 bool AESDecryptor::decrypt_buffer(const std::string& op_mode, EVP_CIPHER_CTX* ctx, const unsigned char* buff,
                                   unsigned char* decrypted_buff, const unsigned char* key, int buff_len,
                                   const unsigned char* iv) {
-    int len, plaintext_len;
+    int len;
 
     /* Initialise the decryption operation. IMPORTANT - ensure you use a key
      * In this example we are using 256 bit AES (i.e. a 256 bit key). The
@@ -89,7 +101,6 @@ bool AESDecryptor::decrypt_buffer(const std::string& op_mode, EVP_CIPHER_CTX* ct
     if(EVP_DecryptUpdate(ctx, decrypted_buff, &len, buff, buff_len) != 1) {
         return false;
     }
-    plaintext_len = len;
 
 //    /* Finalise the decryption. Further plaintext bytes may be written at
 //     * this stage.

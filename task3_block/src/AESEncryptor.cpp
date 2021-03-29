@@ -6,6 +6,7 @@
 #include <random>
 #include <fstream>
 #include <vector>
+#include <iostream>
 
 #include "AESEncryptor.hpp"
 #include "TGAReader.hpp"
@@ -25,15 +26,19 @@ bool AESEncryptor::load_tga_file(const std::string& filename) {
 }
 
 bool AESEncryptor::encrypt(const std::string& op_mode, const unsigned char* key, const unsigned char* iv) {
+    cout << "=== Encrypting file " << m_filename << "... ===" << endl;
 
     if (!m_file_loaded)
         return false;
 
+    size_t last_dot = m_filename.find_last_of('.');
+    string raw_name = m_filename.substr(0, last_dot);
+
     string new_filename;
     if (op_mode == "ECB")
-        new_filename = m_filename + "_ecb.tga";
+        new_filename = raw_name + "_ecb.tga";
     else
-        new_filename = m_filename + "_cbc.tga";
+        new_filename = raw_name + "_cbc.tga";
 
     ofstream out_file(new_filename);
     ifstream in_file(m_filename);
@@ -43,7 +48,7 @@ bool AESEncryptor::encrypt(const std::string& op_mode, const unsigned char* key,
     char* header_buff = new char[m_skip_count];
     in_file.read(header_buff, m_skip_count);
     out_file.write(header_buff, m_skip_count);
-
+    delete [] header_buff;
 
 
     char* file_buff = new char[BUFFER_SIZE];
@@ -62,44 +67,14 @@ bool AESEncryptor::encrypt(const std::string& op_mode, const unsigned char* key,
         out_file.write(encrypted_buff, bytes_read);
     }
 
+    delete [] file_buff;
+    delete [] encrypted_buff;
+
     /* Clean up */
     EVP_CIPHER_CTX_free(ctx);
 
+    cout << "=== Encryption successful! (" << new_filename << ") ===" << endl;
     return true;
-//
-//    int plaintext_len;
-//    unsigned char plaintext[20];
-//
-//    /* Create and initialise the context */
-//    if(!(ctx = EVP_CIPHER_CTX_new()))
-//        return false;
-//
-//    /* Initialise the decryption operation. IMPORTANT - ensure you use a key
-//     * In this example we are using 256 bit AES (i.e. a 256 bit key). The
-//    */
-//    if(EVP_DecryptInit_ex(ctx, EVP_aes_128_ecb(), nullptr, key, iv) != 1)
-//        return false;
-//
-//    /* Provide the message to be decrypted, and obtain the plaintext output.
-//     * EVP_DecryptUpdate can be called multiple times if necessary
-//     */
-//    if(EVP_DecryptUpdate(ctx, plaintext, &len, cipher_text, cipher_text_len) != 1)
-//        return false;
-//    plaintext_len = len;
-//
-//    /* Finalise the decryption. Further plaintext bytes may be written at
-//     * this stage.
-//     */
-//    if(EVP_DecryptFinal_ex(ctx, plaintext + len, &len) != 1)
-//        return false;
-//    plaintext_len += len;
-//
-//    /* Clean up */
-//    EVP_CIPHER_CTX_free(ctx);
-//
-//    //printf("DEBUG: Plain text: %s\n", plain_text);
-//
-//    return true;
 }
 
 void AESEncryptor::random_128_key(unsigned char key[16]) {
@@ -114,7 +89,8 @@ void AESEncryptor::random_128_key(unsigned char key[16]) {
 bool AESEncryptor::encrypt_buffer(const std::string& op_mode, EVP_CIPHER_CTX* ctx, const unsigned char* buff,
                                   unsigned char* encrypted_buff, const unsigned char* key, const int buff_len,
                                   const unsigned char* iv) {
-    int len, cipher_text_len;
+    int len;
+//    int cipher_text_len;
 
     /* Initialise the encryption operation. IMPORTANT - ensure you use a key
      * In this example we are using 128 bit AES (i.e. a 128 bit key).
@@ -133,14 +109,14 @@ bool AESEncryptor::encrypt_buffer(const std::string& op_mode, EVP_CIPHER_CTX* ct
     if (EVP_EncryptUpdate(ctx, encrypted_buff, &len, buff, buff_len)
         != 1)
         return false;
-    cipher_text_len = len;
+//    cipher_text_len = len;
 
-    /* Finalise the encryption. Further ciphertext bytes may be written at
-     * this stage.
-     */
-    if(EVP_EncryptFinal_ex(ctx, encrypted_buff + len, &len) != 1)
-        return false;
-    cipher_text_len += len;
+//    /* Finalise the encryption. Further ciphertext bytes may be written at
+//     * this stage.
+//     */
+//    if(EVP_EncryptFinal_ex(ctx, encrypted_buff + len, &len) != 1)
+//        return false;
+//    cipher_text_len += len;
 
     return true;
 }
