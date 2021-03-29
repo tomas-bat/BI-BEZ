@@ -23,7 +23,9 @@ deps:
 
 .PHONY: test
 test: $(EXECUTABLE)
-	./$(EXECUTABLE) -e ecb obrazek_tga/Mad_scientist.tga
+	rm -f obrazek_tga/*_cbc.tga obrazek_tga/*_dec.tga && \
+	./$(EXECUTABLE) -e cbc obrazek_tga/Mad_scientist.tga && \
+	./$(EXECUTABLE) -d cbc obrazek_tga/Mad_scientist.tga_cbc.tga
 
 $(EXECUTABLE): $(BUILD_DIR)/block.o $(BUILD_DIR)/AESEncryptor.o $(BUILD_DIR)/AESDecryptor.o $(BUILD_DIR)/TGAReader.o
 	$(LD) -o $(EXECUTABLE) $^ $(LD_FLAGS)

@@ -32,10 +32,11 @@ int main(int argc, char** argv) {
 
     unsigned char key[16];
     unsigned char iv[16];
-    AESEncryptor::random_128_key(key);
-    AESEncryptor::random_128_key(iv);
+    AESEncryptor::static_128_key(key);
+    AESEncryptor::static_128_key(iv);
 
     if (mode == "-e") {
+        cout << "=== Encrypting file " << file_name << "... ===" << endl;
         AESEncryptor encryptor;
         if (!encryptor.load_tga_file(file_name)) {
             cerr << "ERROR: Failed loading file: " << file_name << endl;
@@ -45,9 +46,20 @@ int main(int argc, char** argv) {
             cerr << "ERROR: Failed encrypting file." << endl;
             return 3;
         }
+        cout << "== Encryption successful! ===" << endl;
 
     } else {
-        // decrypt...
+        cout << "=== Decrypting file " << file_name << "... ===" << endl;
+        AESDecryptor decryptor;
+        if (!decryptor.load_encrypted_tga_file(file_name)) {
+            cerr << "ERROR: Failed loading file: " << file_name << endl;
+            return 2;
+        }
+        if (!decryptor.decrypt(op_mode, key, iv)) {
+            cerr << "ERROR: Failed decrypting file." << endl;
+            return 3;
+        }
+        cout << "=== Decryption successful! ===" << endl;
     }
 
     return 0;

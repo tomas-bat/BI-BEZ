@@ -8,14 +8,14 @@
 #include <string>
 #include <openssl/evp.h>
 
-const static int BUFFER_SIZE = 1024;
-
 
 class AESEncryptor {
 public:
     bool load_tga_file(const std::string& filename);
 
     static void random_128_key(unsigned char* key);
+
+    static void static_128_key(unsigned char* key);
 
     bool encrypt(const std::string& op_mode, const unsigned char* key, const unsigned char* iv);
 private:

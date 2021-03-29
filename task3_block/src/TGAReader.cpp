@@ -25,7 +25,7 @@ int TGAReader::get_size_of_tga_header(const std::string& filename) {
     skip_count += 1;
     auto n_characters_in_identification_field = (unsigned char)c;
 
-    printf("DEBUG: Number of characters in identification field: %d\n", n_characters_in_identification_field);
+    //printf("DEBUG: Number of characters in identification field: %d\n", n_characters_in_identification_field);
 
     // skip to position 3
     input.ignore(2);
@@ -39,13 +39,6 @@ int TGAReader::get_size_of_tga_header(const std::string& filename) {
     char color_map_type[5];
     input.read(color_map_type, 5);
     skip_count += 5;
-    int idx_first_color_map_entry = (unsigned char)color_map_type[1] << 8 | (unsigned char)color_map_type[0];
-    int color_map_length = (unsigned char)color_map_type[3] << 8 | (unsigned char)color_map_type[2];
-    int n_bits_in_each_color_map_entry = (unsigned char)color_map_type[4];
-
-    printf("DEBUG: Idx of first color map entry: %d\n", idx_first_color_map_entry);
-    printf("DEBUG: Color map length: %d\n", color_map_length);
-    printf("DEBUG: Idx of first color map entry: %d\n", n_bits_in_each_color_map_entry);
 
     // skip to position 12
     input.ignore(4);
@@ -79,6 +72,6 @@ int TGAReader::get_size_of_tga_header(const std::string& filename) {
         return false;
     input.close();
 
-    printf("DEBUG: Skip count: %d\n", skip_count);
+    //printf("DEBUG: Skip count: %d\n", skip_count);
     return skip_count;
 }
