@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
             cerr << "ERROR: Failed encrypting file." << endl;
             return 3;
         }
-        cout << "== Encryption successful! ===" << endl;
+        cout << "=== Encryption successful! ===" << endl;
 
     } else {
         cout << "=== Decrypting file " << file_name << "... ===" << endl;
