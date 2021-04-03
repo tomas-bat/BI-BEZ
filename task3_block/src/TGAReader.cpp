@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <cstdio>
+#include <limits>
 
 #include "TGAReader.hpp"
 

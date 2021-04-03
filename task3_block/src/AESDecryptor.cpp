@@ -50,8 +50,8 @@ bool AESDecryptor::decrypt(const std::string& op_mode, const unsigned char* key,
 
 
 
-    char* file_buff = new char[BUFFER_SIZE];
-    char* decrypted_buff = new char[BUFFER_SIZE];
+    char* file_buff = new char[2*BUFFER_SIZE];
+    char* decrypted_buff = new char[2*BUFFER_SIZE];
     EVP_CIPHER_CTX* ctx;
     int decrypted_len;
     /* Create and initialise the context */
