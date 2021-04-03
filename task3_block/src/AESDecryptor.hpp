@@ -19,10 +19,6 @@ private:
     bool        m_file_loaded = false;
     std::string m_filename;
     int         m_skip_count;
-
-    bool decrypt_buffer(const std::string& op_mode, EVP_CIPHER_CTX* ctx, const unsigned char* buff,
-                        unsigned char* decrypted_buff, const unsigned char* key, int buff_len, int& decrypted_len,
-                        const unsigned char* iv);
 };
 
 

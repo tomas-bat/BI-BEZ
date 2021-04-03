@@ -75,8 +75,8 @@ bool AESDecryptor::decrypt(const std::string& op_mode, const unsigned char* key,
     while (!in_file.eof()) {
         in_file.read(file_buff, BUFFER_SIZE);
         int bytes_read = in_file.gcount();
-        if (!decrypt_buffer(op_mode, ctx, reinterpret_cast<const unsigned char*>(file_buff),
-                            reinterpret_cast<unsigned char*>(decrypted_buff), key, bytes_read, decrypted_len, iv))
+        if (EVP_DecryptUpdate(ctx, reinterpret_cast<unsigned char*>(decrypted_buff), &decrypted_len,
+                              reinterpret_cast<const unsigned char*>(file_buff), bytes_read) != 1)
             return false;
         out_file.write(decrypted_buff, decrypted_len);
     }
@@ -97,20 +97,6 @@ bool AESDecryptor::decrypt(const std::string& op_mode, const unsigned char* key,
     EVP_CIPHER_CTX_free(ctx);
 
     cout << "=== Decryption successful! (" << new_filename << ") ===" << endl;
-
-    return true;
-}
-
-bool AESDecryptor::decrypt_buffer(const std::string& op_mode, EVP_CIPHER_CTX* ctx, const unsigned char* buff,
-                                  unsigned char* decrypted_buff, const unsigned char* key, int buff_len,
-                                  int& decrypted_len, const unsigned char* iv) {
-
-    /* Provide the message to be decrypted, and obtain the plaintext output.
-     * EVP_DecryptUpdate can be called multiple times if necessary
-     */
-    if(EVP_DecryptUpdate(ctx, decrypted_buff, &decrypted_len, buff, buff_len) != 1) {
-        return false;
-    }
 
     return true;
 }

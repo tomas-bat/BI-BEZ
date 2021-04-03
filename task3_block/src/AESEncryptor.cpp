@@ -73,8 +73,9 @@ bool AESEncryptor::encrypt(const std::string& op_mode, const unsigned char* key,
     while (!in_file.eof()) {
         in_file.read(file_buff, BUFFER_SIZE);
         int bytes_read = in_file.gcount();
-        if (!encrypt_buffer(op_mode, ctx, reinterpret_cast<const unsigned char*>(file_buff),
-                            reinterpret_cast<unsigned char*>(encrypted_buff), key, bytes_read, cipher_text_len, iv))
+        if (EVP_EncryptUpdate(ctx, reinterpret_cast<unsigned char*>(encrypted_buff), &cipher_text_len,
+                              reinterpret_cast<const unsigned char*>(file_buff), bytes_read)
+            != 1)
             return false;
         out_file.write(encrypted_buff, cipher_text_len);
     }
@@ -104,19 +105,6 @@ void AESEncryptor::random_128_key(unsigned char key[16]) {
 
     for (int i = 0; i < 16; i++)
         key[i] = dist(mt);
-}
-
-bool AESEncryptor::encrypt_buffer(const std::string& op_mode, EVP_CIPHER_CTX* ctx, const unsigned char* buff,
-                                  unsigned char* encrypted_buff, const unsigned char* key, const int buff_len,
-                                  int& cipher_text_len, const unsigned char* iv) {
-    /* Provide the message to be encrypted, and obtain the encrypted output.
-     * EVP_EncryptUpdate can be called multiple times if necessary
-     */
-    if (EVP_EncryptUpdate(ctx, encrypted_buff, &cipher_text_len, buff, buff_len)
-        != 1)
-        return false;
-
-    return true;
 }
 
 void AESEncryptor::static_128_key(unsigned char* key) {
