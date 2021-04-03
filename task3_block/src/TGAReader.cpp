@@ -21,7 +21,7 @@ int TGAReader::get_size_of_tga_header(const std::string& filename) {
     streamsize len = input.gcount();
     input.clear();
     input.seekg(0, ios_base::beg);
-    printf("DEBUG: File size: %td\n", len);
+    //printf("DEBUG: File size: %td\n", len);
 
     if (len < 18)
         return -1;
@@ -53,6 +53,9 @@ int TGAReader::get_size_of_tga_header(const std::string& filename) {
     int color_map_entry = (unsigned char)color_map_type[1] << 8 | (unsigned char)color_map_type[0];
     int n_color_map_entries = (unsigned char)color_map_type[3] << 8 | (unsigned char)color_map_type[2];
     auto n_bits_in_color_map_entry = (unsigned char)color_map_type[4];
+
+    if (color_map_entry > len)
+        return -1;
 
     skip_count += n_color_map_entries * (n_bits_in_color_map_entry / 8);
 
