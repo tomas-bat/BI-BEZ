@@ -54,18 +54,38 @@ bool AESEncryptor::encrypt(const std::string& op_mode, const unsigned char* key,
     char* file_buff = new char[BUFFER_SIZE];
     char* encrypted_buff = new char[BUFFER_SIZE];
     EVP_CIPHER_CTX* ctx;
-    /* Create and initialise the context */
+    int cipher_text_len;
+    /* Create and init the context */
     if(!(ctx = EVP_CIPHER_CTX_new()))
         return false;
+
+    /* Initialise the encryption operation. IMPORTANT - ensure you use a key
+     * In this example we are using 128 bit AES (i.e. a 128 bit key).
+     */
+    if (op_mode == "ECB") {
+        if (EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), nullptr, key, iv) != 1)
+            return false;
+    } else {
+        if (EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), nullptr, key, iv) != 1)
+            return false;
+    }
 
     while (!in_file.eof()) {
         in_file.read(file_buff, BUFFER_SIZE);
         int bytes_read = in_file.gcount();
         if (!encrypt_buffer(op_mode, ctx, reinterpret_cast<const unsigned char*>(file_buff),
-                            reinterpret_cast<unsigned char*>(encrypted_buff), key, bytes_read, iv))
+                            reinterpret_cast<unsigned char*>(encrypted_buff), key, bytes_read, cipher_text_len, iv))
             return false;
-        out_file.write(encrypted_buff, bytes_read);
+        out_file.write(encrypted_buff, cipher_text_len);
     }
+
+    /* Finalise the encryption. Further ciphertext bytes may be written at
+     * this stage.
+     */
+    if(EVP_EncryptFinal_ex(ctx, reinterpret_cast<unsigned char*>(encrypted_buff), &cipher_text_len) != 1)
+        return false;
+
+    out_file.write(encrypted_buff, cipher_text_len);
 
     delete [] file_buff;
     delete [] encrypted_buff;
@@ -88,35 +108,13 @@ void AESEncryptor::random_128_key(unsigned char key[16]) {
 
 bool AESEncryptor::encrypt_buffer(const std::string& op_mode, EVP_CIPHER_CTX* ctx, const unsigned char* buff,
                                   unsigned char* encrypted_buff, const unsigned char* key, const int buff_len,
-                                  const unsigned char* iv) {
-    int len;
-//    int cipher_text_len;
-
-    /* Initialise the encryption operation. IMPORTANT - ensure you use a key
-     * In this example we are using 128 bit AES (i.e. a 128 bit key).
-     */
-    if (op_mode == "ECB") {
-        if (EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), nullptr, key, iv) != 1)
-            return false;
-    } else {
-        if (EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), nullptr, key, iv) != 1)
-            return false;
-    }
-
+                                  int& cipher_text_len, const unsigned char* iv) {
     /* Provide the message to be encrypted, and obtain the encrypted output.
      * EVP_EncryptUpdate can be called multiple times if necessary
      */
-    if (EVP_EncryptUpdate(ctx, encrypted_buff, &len, buff, buff_len)
+    if (EVP_EncryptUpdate(ctx, encrypted_buff, &cipher_text_len, buff, buff_len)
         != 1)
         return false;
-//    cipher_text_len = len;
-
-//    /* Finalise the encryption. Further ciphertext bytes may be written at
-//     * this stage.
-//     */
-//    if(EVP_EncryptFinal_ex(ctx, encrypted_buff + len, &len) != 1)
-//        return false;
-//    cipher_text_len += len;
 
     return true;
 }

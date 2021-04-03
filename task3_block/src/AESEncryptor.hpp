@@ -24,7 +24,8 @@ private:
     int         m_skip_count;
 
     bool encrypt_buffer(const std::string& op_mode, EVP_CIPHER_CTX* ctx, const unsigned char* buff,
-                        unsigned char* encrypted_buff, const unsigned char* key, int buff_len, const unsigned char* iv);
+                        unsigned char* encrypted_buff, const unsigned char* key, int buff_len, int& cipher_text_len,
+                        const unsigned char* iv);
 };
 
 

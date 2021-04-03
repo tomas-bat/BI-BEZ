@@ -53,18 +53,42 @@ bool AESDecryptor::decrypt(const std::string& op_mode, const unsigned char* key,
     char* file_buff = new char[BUFFER_SIZE];
     char* decrypted_buff = new char[BUFFER_SIZE];
     EVP_CIPHER_CTX* ctx;
+    int decrypted_len;
     /* Create and initialise the context */
-    if(!(ctx = EVP_CIPHER_CTX_new()))
+    if(!(ctx = EVP_CIPHER_CTX_new())) {
         return false;
+    }
+
+    /* Initialise the decryption operation. IMPORTANT - ensure you use a key
+     * In this example we are using 256 bit AES (i.e. a 256 bit key). The
+     */
+    if (op_mode == "ECB") {
+        if (EVP_DecryptInit_ex(ctx, EVP_aes_128_ecb(), nullptr, key, iv) != 1) {
+            return false;
+        }
+    } else {
+        if (EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), nullptr, key, iv) != 1) {
+            return false;
+        }
+    }
 
     while (!in_file.eof()) {
         in_file.read(file_buff, BUFFER_SIZE);
         int bytes_read = in_file.gcount();
         if (!decrypt_buffer(op_mode, ctx, reinterpret_cast<const unsigned char*>(file_buff),
-                            reinterpret_cast<unsigned char*>(decrypted_buff), key, bytes_read, iv))
+                            reinterpret_cast<unsigned char*>(decrypted_buff), key, bytes_read, decrypted_len, iv))
             return false;
-        out_file.write(decrypted_buff, bytes_read);
+        out_file.write(decrypted_buff, decrypted_len);
     }
+
+    /* Finalise the decryption. Further plaintext bytes may be written at
+     * this stage.
+     */
+    if(EVP_DecryptFinal_ex(ctx, reinterpret_cast<unsigned char*>(decrypted_buff), &decrypted_len) != 1) {
+        return false;
+    }
+
+    out_file.write(decrypted_buff, decrypted_len);
 
     delete [] file_buff;
     delete [] decrypted_buff;
@@ -79,38 +103,14 @@ bool AESDecryptor::decrypt(const std::string& op_mode, const unsigned char* key,
 
 bool AESDecryptor::decrypt_buffer(const std::string& op_mode, EVP_CIPHER_CTX* ctx, const unsigned char* buff,
                                   unsigned char* decrypted_buff, const unsigned char* key, int buff_len,
-                                  const unsigned char* iv) {
-    int len;
-
-    /* Initialise the decryption operation. IMPORTANT - ensure you use a key
-     * In this example we are using 256 bit AES (i.e. a 256 bit key). The
-    */
-    if (op_mode == "ECB") {
-        if (EVP_DecryptInit_ex(ctx, EVP_aes_128_ecb(), nullptr, key, iv) != 1) {
-            return false;
-        }
-    } else {
-        if (EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), nullptr, key, iv) != 1) {
-            return false;
-        }
-    }
+                                  int& decrypted_len, const unsigned char* iv) {
 
     /* Provide the message to be decrypted, and obtain the plaintext output.
      * EVP_DecryptUpdate can be called multiple times if necessary
      */
-    if(EVP_DecryptUpdate(ctx, decrypted_buff, &len, buff, buff_len) != 1) {
+    if(EVP_DecryptUpdate(ctx, decrypted_buff, &decrypted_len, buff, buff_len) != 1) {
         return false;
     }
-
-//    /* Finalise the decryption. Further plaintext bytes may be written at
-//     * this stage.
-//     */
-//    if(EVP_DecryptFinal_ex(ctx, decrypted_buff + len, &len) != 1) {
-//        ERR_print_errors_fp(stderr);
-//        return false;
-//    }
-//    plaintext_len += len;
-//    printf("===== all good\n");
 
     return true;
 }
