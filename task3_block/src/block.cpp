@@ -1,3 +1,7 @@
+/**
+ * @author Tomáš Batěk, batekto2@fit.cvut.cz
+ */
+
 #include <iostream>
 #include <string>
 #include <algorithm>

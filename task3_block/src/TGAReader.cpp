@@ -16,6 +16,16 @@ int TGAReader::get_size_of_tga_header(const std::string& filename) {
     if (!input)
         return -1;
 
+    // Get file size:
+    input.ignore(numeric_limits<streamsize>::max());
+    streamsize len = input.gcount();
+    input.clear();
+    input.seekg(0, ios_base::beg);
+    printf("DEBUG: File size: %td\n", len);
+
+    if (len < 18)
+        return -1;
+
     int skip_count = 0;
 
     // OFFSET: 0, LENGTH: 1
@@ -40,6 +50,16 @@ int TGAReader::get_size_of_tga_header(const std::string& filename) {
     input.read(color_map_type, 5);
     skip_count += 5;
 
+    int color_map_entry = (unsigned char)color_map_type[1] << 8 | (unsigned char)color_map_type[0];
+    int n_color_map_entries = (unsigned char)color_map_type[3] << 8 | (unsigned char)color_map_type[2];
+    auto n_bits_in_color_map_entry = (unsigned char)color_map_type[4];
+
+    skip_count += n_color_map_entries * (n_bits_in_color_map_entry / 8);
+
+    //printf("DEBUG: index of first color map entry: %d\n", color_map_entry);
+    //printf("DEBUG: number of color map entries: %d\n", n_color_map_entries);
+    //printf("DEBUG: number of bits in each color map entry: %d\n", n_bits_in_color_map_entry);
+
     // skip to position 12
     input.ignore(4);
     skip_count += 4;
@@ -54,10 +74,16 @@ int TGAReader::get_size_of_tga_header(const std::string& filename) {
     int size = (unsigned char)size_buff[1] << 8 | (unsigned char)size_buff[0];
     printf("- Width: %d\n", size);
 
+    if (size <= 0)
+        return -1;
+
     input.read(size_buff, 2);
     skip_count += 2;
     size = (unsigned char)size_buff[1] << 8 | (unsigned char)size_buff[0];
     printf("- Height: %d\n", size);
+
+    if (size <= 0)
+        return -1;
 
 
     // skip to position 18
@@ -71,6 +97,9 @@ int TGAReader::get_size_of_tga_header(const std::string& filename) {
     if (input.fail())
         return false;
     input.close();
+
+    if (skip_count >= len)
+        return -1;
 
     //printf("DEBUG: Skip count: %d\n", skip_count);
     return skip_count;
