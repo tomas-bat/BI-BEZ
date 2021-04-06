@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <memory>
 
 #include "AESDecryptor.hpp"
 #include "TGAReader.hpp"
@@ -43,15 +44,17 @@ bool AESDecryptor::decrypt(const std::string& op_mode, const unsigned char* key,
     if (!out_file || !in_file)
         return false;
 
-    char* header_buff = new char[m_skip_count];
-    in_file.read(header_buff, m_skip_count);
-    out_file.write(header_buff, m_skip_count);
-    delete [] header_buff;
+    shared_ptr<char> header_buff(new char[m_skip_count]);
+    in_file.read(header_buff.get(), m_skip_count);
+    if (in_file.fail())
+        return false;
+    out_file.write(header_buff.get(), m_skip_count);
+    if (out_file.fail())
+        return false;
 
 
-
-    char* file_buff = new char[2*BUFFER_SIZE];
-    char* decrypted_buff = new char[2*BUFFER_SIZE];
+    shared_ptr<char> file_buff(new char[2*BUFFER_SIZE]);
+    shared_ptr<char> decrypted_buff(new char[2*BUFFER_SIZE]);
     EVP_CIPHER_CTX* ctx;
     int decrypted_len;
     /* Create and initialise the context */
@@ -73,25 +76,29 @@ bool AESDecryptor::decrypt(const std::string& op_mode, const unsigned char* key,
     }
 
     while (!in_file.eof()) {
-        in_file.read(file_buff, BUFFER_SIZE);
-        int bytes_read = in_file.gcount();
-        if (EVP_DecryptUpdate(ctx, reinterpret_cast<unsigned char*>(decrypted_buff), &decrypted_len,
-                              reinterpret_cast<const unsigned char*>(file_buff), bytes_read) != 1)
+        in_file.read(file_buff.get(), BUFFER_SIZE);
+        if (in_file.fail() && !in_file.eof())
             return false;
-        out_file.write(decrypted_buff, decrypted_len);
+        int bytes_read = in_file.gcount();
+        if (EVP_DecryptUpdate(ctx, reinterpret_cast<unsigned char*>(decrypted_buff.get()), &decrypted_len,
+                              reinterpret_cast<const unsigned char*>(file_buff.get()), bytes_read) != 1)
+            return false;
+        out_file.write(decrypted_buff.get(), decrypted_len);
+        if (out_file.fail())
+            return false;
     }
 
     /* Finalise the decryption. Further plaintext bytes may be written at
      * this stage.
      */
-    if(EVP_DecryptFinal_ex(ctx, reinterpret_cast<unsigned char*>(decrypted_buff), &decrypted_len) != 1) {
+    if(EVP_DecryptFinal_ex(ctx, reinterpret_cast<unsigned char*>(decrypted_buff.get()), &decrypted_len) != 1) {
         return false;
     }
 
-    out_file.write(decrypted_buff, decrypted_len);
+    out_file.write(decrypted_buff.get(), decrypted_len);
+    if (out_file.fail())
+        return false;
 
-    delete [] file_buff;
-    delete [] decrypted_buff;
 
     /* Clean up */
     EVP_CIPHER_CTX_free(ctx);

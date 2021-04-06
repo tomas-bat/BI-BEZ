@@ -24,6 +24,9 @@ int TGAReader::get_size_of_tga_header(const std::string& filename) {
     input.seekg(0, ios_base::beg);
     //printf("DEBUG: File size: %td\n", len);
 
+    if (input.fail())
+        return -1;
+
     if (len < 18)
         return -1;
 
@@ -33,6 +36,8 @@ int TGAReader::get_size_of_tga_header(const std::string& filename) {
     // Number of Characters in Identification Field. (1B)
     char c;
     input.read(&c, 1);
+    if (input.fail())
+        return -1;
     skip_count += 1;
     auto n_characters_in_identification_field = (unsigned char)c;
 
@@ -49,6 +54,8 @@ int TGAReader::get_size_of_tga_header(const std::string& filename) {
     // 7:   Number of bits in each color map entry. (1B)
     char color_map_type[5];
     input.read(color_map_type, 5);
+    if (input.fail())
+        return -1;
     skip_count += 5;
 
     int color_map_entry = (unsigned char)color_map_type[1] << 8 | (unsigned char)color_map_type[0];
@@ -74,6 +81,8 @@ int TGAReader::get_size_of_tga_header(const std::string& filename) {
     // 14-15: Height (2B, little endian)
     char size_buff[2];
     input.read(size_buff, 2);
+    if (input.fail())
+        return -1;
     skip_count += 2;
     int size = (unsigned char)size_buff[1] << 8 | (unsigned char)size_buff[0];
     printf("- Width: %d\n", size);
@@ -82,6 +91,8 @@ int TGAReader::get_size_of_tga_header(const std::string& filename) {
         return -1;
 
     input.read(size_buff, 2);
+    if (input.fail())
+        return -1;
     skip_count += 2;
     size = (unsigned char)size_buff[1] << 8 | (unsigned char)size_buff[0];
     printf("- Height: %d\n", size);

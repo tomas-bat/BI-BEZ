@@ -7,6 +7,7 @@
 #include <fstream>
 #include <vector>
 #include <iostream>
+#include <memory>
 
 #include "AESEncryptor.hpp"
 #include "TGAReader.hpp"
@@ -45,14 +46,17 @@ bool AESEncryptor::encrypt(const std::string& op_mode, const unsigned char* key,
     if (!out_file || !in_file)
         return false;
 
-    char* header_buff = new char[m_skip_count];
-    in_file.read(header_buff, m_skip_count);
-    out_file.write(header_buff, m_skip_count);
-    delete [] header_buff;
+    shared_ptr<char> header_buff(new char[m_skip_count]);
+    in_file.read(header_buff.get(), m_skip_count);
+    if (in_file.fail())
+        return false;
+    out_file.write(header_buff.get(), m_skip_count);
+    if (out_file.fail())
+        return false;
 
 
-    char* file_buff = new char[BUFFER_SIZE];
-    char* encrypted_buff = new char[BUFFER_SIZE];
+    shared_ptr<char> file_buff(new char[BUFFER_SIZE]);
+    shared_ptr<char> encrypted_buff(new char[BUFFER_SIZE]);
     EVP_CIPHER_CTX* ctx;
     int cipher_text_len;
     /* Create and init the context */
@@ -71,25 +75,28 @@ bool AESEncryptor::encrypt(const std::string& op_mode, const unsigned char* key,
     }
 
     while (!in_file.eof()) {
-        in_file.read(file_buff, BUFFER_SIZE);
+        in_file.read(file_buff.get(), BUFFER_SIZE);
+        if (in_file.fail() && !in_file.eof())
+            return false;
         int bytes_read = in_file.gcount();
-        if (EVP_EncryptUpdate(ctx, reinterpret_cast<unsigned char*>(encrypted_buff), &cipher_text_len,
-                              reinterpret_cast<const unsigned char*>(file_buff), bytes_read)
+        if (EVP_EncryptUpdate(ctx, reinterpret_cast<unsigned char*>(encrypted_buff.get()), &cipher_text_len,
+                              reinterpret_cast<const unsigned char*>(file_buff.get()), bytes_read)
             != 1)
             return false;
-        out_file.write(encrypted_buff, cipher_text_len);
+        out_file.write(encrypted_buff.get(), cipher_text_len);
+        if (out_file.fail())
+            return false;
     }
 
     /* Finalise the encryption. Further ciphertext bytes may be written at
      * this stage.
      */
-    if(EVP_EncryptFinal_ex(ctx, reinterpret_cast<unsigned char*>(encrypted_buff), &cipher_text_len) != 1)
+    if(EVP_EncryptFinal_ex(ctx, reinterpret_cast<unsigned char*>(encrypted_buff.get()), &cipher_text_len) != 1)
         return false;
 
-    out_file.write(encrypted_buff, cipher_text_len);
-
-    delete [] file_buff;
-    delete [] encrypted_buff;
+    out_file.write(encrypted_buff.get(), cipher_text_len);
+    if (out_file.fail())
+        return false;
 
     /* Clean up */
     EVP_CIPHER_CTX_free(ctx);

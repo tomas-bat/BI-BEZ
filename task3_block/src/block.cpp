@@ -30,7 +30,7 @@ bool check_input(const int argc, char** argv, string& mode, string& op_mode, str
 int main(int argc, char** argv) {
     string mode, op_mode, file_name;
     if (!check_input(argc, argv, mode, op_mode, file_name)) {
-        cout << "usage:   " << argv[0] << " [ -e | -d ] [ ECB | BCB ] <filename>" << endl;
+        cout << "usage:   " << argv[0] << " [ -e | -d ] [ ECB | CBC ] <filename>" << endl;
         cout << "example: " << argv[0] << " -e ecb picture.tga" << endl;
         return 1;
     }
