@@ -37,6 +37,7 @@ void Encryptor::encrypt() {
     }
 
     write_header(type, encrypted_key, encrypted_key_len, iv);
+    delete[] encrypted_key;
 
     ifstream in_file(m_input_file, ios::binary);
     if (!in_file)

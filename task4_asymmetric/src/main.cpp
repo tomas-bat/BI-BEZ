@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
             cerr << "Encryption failed: " << ex.what() << endl;
             return 3;
         }
-        cout << "Encryption sucessful: " << out_file << endl;
+        cout << "Encryption successful: " << out_file << endl;
     } else {
         Decryptor decryptor(in_file, key_file, out_file);
         try {
@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
             cerr << "Decryption failed: " << ex.what() << endl;
             return 4;
         }
-        cout << "Decryption sucessful: " << out_file << endl;
+        cout << "Decryption successful: " << out_file << endl;
     }
 
 	return 0;
