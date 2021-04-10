@@ -78,8 +78,9 @@ EVP_PKEY* Decryptor::get_priv_key() {
 
     if (!fp)
         throw runtime_error("Error opening file with private key.");
-
-    return PEM_read_PrivateKey(fp, nullptr, nullptr, nullptr);
+    EVP_PKEY* priv_key = PEM_read_PrivateKey(fp, nullptr, nullptr, nullptr);
+    fclose(fp);
+    return priv_key;
 }
 
 int Decryptor::read_header(const EVP_CIPHER** cipher_type, unsigned char** encrypted_key, int& encrypted_key_len,

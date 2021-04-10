@@ -39,14 +39,20 @@ void Encryptor::encrypt() {
 
     write_header(type, encrypted_key, encrypted_key_len, iv);
     delete[] encrypted_key;
+    EVP_PKEY_free(pub_key);
+
 
     ifstream in_file(m_input_file, ios::binary);
-    if (!in_file)
+    if (!in_file) {
+        EVP_CIPHER_CTX_free(ctx);
         throw runtime_error("Failed opening input file.");
+    }
 
     ofstream out_file(m_output_file, ios::app);
-    if (!out_file)
+    if (!out_file) {
+        EVP_CIPHER_CTX_free(ctx);
         throw runtime_error("Failed opening output file with append mode.");
+    }
 
     int len;
     unsigned char buffer[BUFFER_SIZE];
@@ -80,8 +86,9 @@ EVP_PKEY* Encryptor::get_pub_key() {
 
     if (!fp)
         throw runtime_error("Error opening file with public key.");
-
-    return PEM_read_PUBKEY(fp, nullptr, nullptr, nullptr);
+    EVP_PKEY* pub_key = PEM_read_PUBKEY(fp, nullptr, nullptr, nullptr);
+    fclose(fp);
+    return pub_key;
 }
 
 void Encryptor::write_header(const EVP_CIPHER* cipher_type, unsigned char* encrypted_key, int encrypted_key_len,
