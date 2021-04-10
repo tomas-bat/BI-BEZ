@@ -25,7 +25,7 @@ deps:
 test: $(EXECUTABLE)
 	./task4
 
-$(EXECUTABLE): $(BUILD_DIR)/main.o
+$(EXECUTABLE): $(BUILD_DIR)/main.o $(BUILD_DIR)/Encryptor.o $(BUILD_DIR)/Decryptor.o
 	$(LD) -o $(EXECUTABLE) $^ $(LD_FLAGS)
 
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp

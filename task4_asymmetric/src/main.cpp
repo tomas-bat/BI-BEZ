@@ -1,5 +1,15 @@
+/**
+ * @author Tomáš Batěk, batekto2@fit.cvut.cz
+ */
+
+
 #include <iostream>
 #include <string>
+#include <exception>
+
+#include "Encryptor.hpp"
+#include "Decryptor.hpp"
+
 using namespace std;
 
 bool check_input(const int argc, char** argv, string& mode, string& key_file, string& in_file, string& out_file) {
@@ -23,6 +33,24 @@ int main(int argc, char* argv[]) {
         cout << "  Decryption:" << endl;
         cout << "    " << argv[0] << " -d <private key> <encrypted filename> <output filename>" << endl;
         return 1;
+    }
+
+    if (mode == "-e") {
+        Encryptor encryptor(in_file, key_file, out_file);
+        try {
+            encryptor.encrypt();
+        } catch (const exception& ex) {
+            cerr << "Encryption failed: " << ex.what() << endl;
+            return 2;
+        }
+    } else {
+        Decryptor decryptor(in_file, key_file, out_file);
+        try {
+            decryptor.decrypt();
+        } catch (const exception& ex) {
+            cerr << "Decryption failed: " << ex.what() << endl;
+            return 3;
+        }
     }
 
 
