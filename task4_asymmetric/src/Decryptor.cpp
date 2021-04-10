@@ -9,5 +9,5 @@
 using namespace std;
 
 void Decryptor::decrypt() {
-    throw runtime_error("Decryption error.");
+    throw runtime_error("Decryption not implemented.");
 }

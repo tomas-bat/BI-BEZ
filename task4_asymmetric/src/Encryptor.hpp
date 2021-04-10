@@ -7,6 +7,9 @@
 
 #include <string>
 #include <utility>
+#include <memory>
+#include <openssl/evp.h>
+#include <openssl/pem.h>
 
 
 class Encryptor {
@@ -20,6 +23,11 @@ private:
     std::string m_input_file;
     std::string m_key_file;
     std::string m_output_file;
+
+    EVP_PKEY* get_pub_key();
+
+    void write_header(const EVP_CIPHER* cipher_type, unsigned char* encrypted_key, int encrypted_key_len,
+                      unsigned char* iv);
 };
 
 

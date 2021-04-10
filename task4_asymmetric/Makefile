@@ -8,10 +8,10 @@ MACOS_OPENSSL_DIR=/opt/homebrew/opt/openssl@1.1
 
 CXX=g++
 LD=g++
-CXX_FLAGS=-Wall -pedantic -std=c++14 -O2
+CXX_FLAGS=-Wall -pedantic -std=c++14 -O2 -g -fsanitize=address
 
 ifeq ($(UNAME_S), Darwin) # macOS
-LD_FLAGS=-L$(MACOS_OPENSSL_DIR)/lib -I$(MACOS_OPENSSL_DIR)/include -lcrypto
+LD_FLAGS=-L$(MACOS_OPENSSL_DIR)/lib -I$(MACOS_OPENSSL_DIR)/include -lcrypto -g -fsanitize=address
 else # Linux
 LD_FLAGS=-lcrypto
 endif

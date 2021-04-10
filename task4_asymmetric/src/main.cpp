@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <exception>
+#include <openssl/rand.h>
 
 #include "Encryptor.hpp"
 #include "Decryptor.hpp"
@@ -35,27 +36,30 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    if (RAND_load_file("/dev/random", 32) != 32) {
+        cerr << "Failed seeding the random generator" << endl;
+        return 2;
+    }
+
     if (mode == "-e") {
         Encryptor encryptor(in_file, key_file, out_file);
         try {
             encryptor.encrypt();
         } catch (const exception& ex) {
             cerr << "Encryption failed: " << ex.what() << endl;
-            return 2;
+            return 3;
         }
+        cout << "Encryption sucessful: " << out_file << endl;
     } else {
         Decryptor decryptor(in_file, key_file, out_file);
         try {
             decryptor.decrypt();
         } catch (const exception& ex) {
             cerr << "Decryption failed: " << ex.what() << endl;
-            return 3;
+            return 4;
         }
+        cout << "Decryption sucessful: " << out_file << endl;
     }
-
-
-
-	cout << "Hello World!" << endl;
 
 	return 0;
 }
