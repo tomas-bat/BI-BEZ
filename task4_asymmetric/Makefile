@@ -8,10 +8,10 @@ MACOS_OPENSSL_DIR=/opt/homebrew/opt/openssl@1.1
 
 CXX=g++
 LD=g++
-CXX_FLAGS=-Wall -pedantic -std=c++14 -O2 -g -fsanitize=address
+CXX_FLAGS=-Wall -pedantic -std=c++14 -O2
 
 ifeq ($(UNAME_S), Darwin) # macOS
-LD_FLAGS=-L$(MACOS_OPENSSL_DIR)/lib -I$(MACOS_OPENSSL_DIR)/include -lcrypto -g -fsanitize=address
+LD_FLAGS=-L$(MACOS_OPENSSL_DIR)/lib -I$(MACOS_OPENSSL_DIR)/include -lcrypto
 else # Linux
 LD_FLAGS=-lcrypto
 endif
@@ -23,7 +23,9 @@ deps:
 
 .PHONY: test
 test: $(EXECUTABLE)
-	./task4
+	./task4 -e pubkey.pem Makefile Makefile.enc
+	./task4 -d privkey.pem Makefile.enc Makefile.dec
+	diff Makefile Makefile.dec
 
 $(EXECUTABLE): $(BUILD_DIR)/main.o $(BUILD_DIR)/Encryptor.o $(BUILD_DIR)/Decryptor.o
 	$(LD) -o $(EXECUTABLE) $^ $(LD_FLAGS)
@@ -34,7 +36,7 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
 
 .PHONY: clean
 clean:
-	rm -rf $(EXECUTABLE) $(BUILD_DIR)
+	rm -rf $(EXECUTABLE) $(BUILD_DIR) *.dec *.enc
 
 # Dependencies:
 -include Makefile.d

@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <random>
+#include <iostream>
 #include <fstream>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
@@ -89,10 +90,10 @@ void Encryptor::write_header(const EVP_CIPHER* cipher_type, unsigned char* encry
     // Position: 0, length: 1 -- CIPHER TYPE
     //     AES_128_CBC = 1
     // Position: 1, length: 4 -- ENCRYPTED KEY LENGTH
-    //     little endian
+    //     int, little endian
     // Position: 5, length: <encrypted key length> -- ENCRYPTED KEY
     // Position: 5 + <encrypted key length>, length: EVP_MAX_IV_LENGTH -- IV
-    // Position: <first data entry> -- DATA
+    // Position: 5 + <encrypted key length> + <EVP_MAX_IV_LENGTH> -- DATA
 
     ofstream out_file(m_output_file, ios::binary);
 

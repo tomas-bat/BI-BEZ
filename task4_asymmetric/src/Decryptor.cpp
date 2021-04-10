@@ -4,7 +4,9 @@
 
 #include <exception>
 #include <fstream>
+#include <iostream>
 #include <memory>
+#include <openssl/err.h>
 #include <cstdlib>
 
 #include "Decryptor.hpp"
@@ -23,9 +25,9 @@ void Decryptor::decrypt() {
     unsigned char* encrypted_key = nullptr;
     int encrypted_key_len;
     unsigned char iv[EVP_MAX_IV_LENGTH];
-    const EVP_CIPHER* type;
+    const EVP_CIPHER* type = nullptr;
 
-    int skip_cnt = read_header(type, encrypted_key, encrypted_key_len, iv);
+    int skip_cnt = read_header(&type, &encrypted_key, encrypted_key_len, iv);
 
     if (!EVP_OpenInit(ctx, type, encrypted_key, encrypted_key_len, iv, priv_key)) {
         delete[] encrypted_key;
@@ -59,8 +61,10 @@ void Decryptor::decrypt() {
             throw runtime_error("Failed writing to output file.");
     }
 
-    if (EVP_SealFinal(ctx, decrypted_buffer, &len) != 1)
+    if (EVP_OpenFinal(ctx, decrypted_buffer, &len) != 1) {
+        ERR_print_errors_fp(stderr);
         throw runtime_error("Decryption finalisation failed.");
+    }
 
     out_file.write(reinterpret_cast<const char*>(decrypted_buffer), len);
     if (out_file.fail())
@@ -78,15 +82,15 @@ EVP_PKEY* Decryptor::get_priv_key() {
     return PEM_read_PrivateKey(fp, nullptr, nullptr, nullptr);
 }
 
-int Decryptor::read_header(const EVP_CIPHER* cipher_type, unsigned char* encrypted_key, int& encrypted_key_len,
+int Decryptor::read_header(const EVP_CIPHER** cipher_type, unsigned char** encrypted_key, int& encrypted_key_len,
                             unsigned char* iv) {
     // Position: 0, length: 1 -- CIPHER TYPE
     //     AES_128_CBC = 1
     // Position: 1, length: 4 -- ENCRYPTED KEY LENGTH
-    //     little endian
+    //     int, little endian
     // Position: 5, length: <encrypted key length> -- ENCRYPTED KEY
     // Position: 5 + <encrypted key length>, length: EVP_MAX_IV_LENGTH -- IV
-    // Position: <first data entry> -- DATA
+    // Position: 5 + <encrypted key length> + <EVP_MAX_IV_LENGTH> -- DATA
 
     ifstream in_file(m_encrypted_file, ios::binary);
     if (!in_file)
@@ -97,7 +101,7 @@ int Decryptor::read_header(const EVP_CIPHER* cipher_type, unsigned char* encrypt
     if (in_file.fail())
         throw runtime_error("Failed while reading header.");
     if (cipher == 1)
-        cipher_type = EVP_aes_128_cbc();
+        *cipher_type = EVP_aes_128_cbc();
     else
         throw runtime_error("Found invalid AES mode when reading header.");
 
@@ -107,8 +111,8 @@ int Decryptor::read_header(const EVP_CIPHER* cipher_type, unsigned char* encrypt
         throw runtime_error("Failed while reading header.");
     memcpy(&encrypted_key_len, key_len, 4);
 
-    encrypted_key = new unsigned char[encrypted_key_len];
-    in_file.read(reinterpret_cast<char*>(encrypted_key), encrypted_key_len);
+    *encrypted_key = new unsigned char[encrypted_key_len];
+    in_file.read(reinterpret_cast<char*>(*encrypted_key), encrypted_key_len);
     if (in_file.fail())
         throw runtime_error("Failed while reading header.");
 

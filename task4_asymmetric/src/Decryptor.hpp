@@ -26,7 +26,7 @@ private:
 
     EVP_PKEY* get_priv_key();
 
-    int read_header(const EVP_CIPHER* cipher_type, unsigned char* encrypted_key, int& encrypted_key_len,
+    int read_header(const EVP_CIPHER** cipher_type, unsigned char** encrypted_key, int& encrypted_key_len,
                      unsigned char* iv);
 };
 
