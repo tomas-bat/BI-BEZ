@@ -7,6 +7,7 @@
 
 #include <string>
 #include <utility>
+#include <cstring>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 
