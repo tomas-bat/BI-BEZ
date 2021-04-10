@@ -36,8 +36,14 @@ void Encryptor::encrypt() {
         delete[] encrypted_key;
         throw runtime_error("Failed initialising the context.");
     }
-
-    write_header(type, encrypted_key, encrypted_key_len, iv);
+    try {
+        write_header(type, encrypted_key, encrypted_key_len, iv);
+    } catch (const runtime_error& ex) {
+        delete[] encrypted_key;
+        EVP_PKEY_free(pub_key);
+        EVP_CIPHER_CTX_free(ctx);
+        throw runtime_error(ex);
+    }
     delete[] encrypted_key;
     EVP_PKEY_free(pub_key);
 

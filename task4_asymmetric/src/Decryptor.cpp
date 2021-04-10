@@ -27,13 +27,22 @@ void Decryptor::decrypt() {
     unsigned char iv[EVP_MAX_IV_LENGTH];
     const EVP_CIPHER* type = nullptr;
 
-    int skip_cnt = read_header(&type, &encrypted_key, encrypted_key_len, iv);
+    int skip_cnt;
+    try {
+        skip_cnt = read_header(&type, &encrypted_key, encrypted_key_len, iv);
+    } catch (const runtime_error& ex) {
+        delete[] encrypted_key;
+        EVP_PKEY_free(priv_key);
+        EVP_CIPHER_CTX_free(ctx);
+        throw runtime_error(ex);
+    }
 
     if (!EVP_OpenInit(ctx, type, encrypted_key, encrypted_key_len, iv, priv_key)) {
         delete[] encrypted_key;
         throw runtime_error("Faled initialising the context.");
     }
     delete[] encrypted_key;
+    EVP_PKEY_free(priv_key);
 
     ifstream in_file(m_encrypted_file, ios::binary);
     if (!in_file) {
