@@ -60,23 +60,33 @@ void Encryptor::encrypt() {
     while (!in_file.eof()) {
         in_file.read(reinterpret_cast<char*>(buffer), BUFFER_SIZE);
         int bytes_read = in_file.gcount();
-        if (in_file.fail() && !in_file.eof())
+        if (in_file.fail() && !in_file.eof()) {
+            EVP_CIPHER_CTX_free(ctx);
             throw runtime_error("Failed when reading input file");
+        }
 
-        if (EVP_SealUpdate(ctx, encrypted_buffer, &len, buffer, bytes_read) != 1)
+        if (EVP_SealUpdate(ctx, encrypted_buffer, &len, buffer, bytes_read) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
             throw runtime_error("Encrypting buffer failed.");
+        }
 
         out_file.write(reinterpret_cast<const char*>(encrypted_buffer), len);
-        if (out_file.fail())
+        if (out_file.fail()) {
+            EVP_CIPHER_CTX_free(ctx);
             throw runtime_error("Failed writing to output file.");
+        }
     }
 
-    if (EVP_SealFinal(ctx, encrypted_buffer, &len) != 1)
+    if (EVP_SealFinal(ctx, encrypted_buffer, &len) != 1) {
+        EVP_CIPHER_CTX_free(ctx);
         throw runtime_error("Encryption finalisation failed.");
+    }
 
     out_file.write(reinterpret_cast<const char*>(encrypted_buffer), len);
-    if (out_file.fail())
+    if (out_file.fail()) {
+        EVP_CIPHER_CTX_free(ctx);
         throw runtime_error("Failed writing to output file.");
+    }
 
     EVP_CIPHER_CTX_free(ctx);
 }

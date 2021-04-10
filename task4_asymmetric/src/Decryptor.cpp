@@ -36,13 +36,17 @@ void Decryptor::decrypt() {
     delete[] encrypted_key;
 
     ifstream in_file(m_encrypted_file, ios::binary);
-    if (!in_file)
+    if (!in_file) {
+        EVP_CIPHER_CTX_free(ctx);
         throw runtime_error("Failed opening input file.");
+    }
     in_file.ignore(skip_cnt);
 
     ofstream out_file(m_decrypted_file, ios::binary);
-    if (!out_file)
+    if (!out_file) {
+        EVP_CIPHER_CTX_free(ctx);
         throw runtime_error("Failed opening output file.");
+    }
 
     int len;
     unsigned char encrypted_buffer[2*BUFFER_SIZE];
@@ -50,25 +54,33 @@ void Decryptor::decrypt() {
     while(!in_file.eof()) {
         in_file.read(reinterpret_cast<char*>(encrypted_buffer), BUFFER_SIZE);
         int bytes_read = in_file.gcount();
-        if (in_file.fail() && !in_file.eof())
+        if (in_file.fail() && !in_file.eof()) {
+            EVP_CIPHER_CTX_free(ctx);
             throw runtime_error("Failed when reading input file");
+        }
 
-        if (EVP_OpenUpdate(ctx, decrypted_buffer, &len, encrypted_buffer, bytes_read) != 1)
+        if (EVP_OpenUpdate(ctx, decrypted_buffer, &len, encrypted_buffer, bytes_read) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
             throw runtime_error("Failed while decrypting buffer.");
+        }
 
         out_file.write(reinterpret_cast<const char*>(decrypted_buffer), len);
-        if (out_file.fail())
+        if (out_file.fail()) {
+            EVP_CIPHER_CTX_free(ctx);
             throw runtime_error("Failed writing to output file.");
+        }
     }
 
     if (EVP_OpenFinal(ctx, decrypted_buffer, &len) != 1) {
-        ERR_print_errors_fp(stderr);
+        EVP_CIPHER_CTX_free(ctx);
         throw runtime_error("Decryption finalisation failed.");
     }
 
     out_file.write(reinterpret_cast<const char*>(decrypted_buffer), len);
-    if (out_file.fail())
+    if (out_file.fail()) {
+        EVP_CIPHER_CTX_free(ctx);
         throw runtime_error("Failed writing to output file.");
+    }
 
     EVP_CIPHER_CTX_free(ctx);
 }
