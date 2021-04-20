@@ -66,8 +66,8 @@ void Encryptor::encrypt() {
     }
 
     int len;
-    unsigned char buffer[BUFFER_SIZE];
-    unsigned char encrypted_buffer[BUFFER_SIZE];
+    unsigned char buffer[32 + BUFFER_SIZE];
+    unsigned char encrypted_buffer[32 + BUFFER_SIZE];
     while (!in_file.eof()) {
         in_file.read(reinterpret_cast<char*>(buffer), BUFFER_SIZE);
         int bytes_read = in_file.gcount();
