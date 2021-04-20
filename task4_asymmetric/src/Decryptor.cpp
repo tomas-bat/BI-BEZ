@@ -17,10 +17,14 @@ using namespace std;
 
 void Decryptor::decrypt() {
     EVP_PKEY* priv_key = get_priv_key();
+    if (!priv_key)
+        throw runtime_error("Wrong private key.");
 
     EVP_CIPHER_CTX* ctx;
-    if (!(ctx = EVP_CIPHER_CTX_new()))
+    if (!(ctx = EVP_CIPHER_CTX_new())) {
+        EVP_PKEY_free(priv_key);
         throw runtime_error("Failed creating new context.");
+    }
 
     unsigned char* encrypted_key = nullptr;
     int encrypted_key_len;
@@ -39,6 +43,8 @@ void Decryptor::decrypt() {
 
     if (!EVP_OpenInit(ctx, type, encrypted_key, encrypted_key_len, iv, priv_key)) {
         delete[] encrypted_key;
+        EVP_PKEY_free(priv_key);
+        EVP_CIPHER_CTX_free(ctx);
         throw runtime_error("Faled initialising the context.");
     }
     delete[] encrypted_key;
@@ -95,7 +101,7 @@ void Decryptor::decrypt() {
 }
 
 EVP_PKEY* Decryptor::get_priv_key() {
-    FILE* fp = fopen(m_key_file.c_str(), "r");
+    FILE* fp = fopen(m_key_file.c_str(), "rb");
 
     if (!fp)
         throw runtime_error("Error opening file with private key.");

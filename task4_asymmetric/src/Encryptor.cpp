@@ -20,12 +20,15 @@ using namespace std;
 
 void Encryptor::encrypt() {
     EVP_PKEY* pub_key = get_pub_key();
+    if (!pub_key)
+        throw runtime_error("Wrong public key.");
     auto* encrypted_key = new unsigned char[EVP_PKEY_size(pub_key)];
     int encrypted_key_len;
     unsigned char iv[EVP_MAX_IV_LENGTH];
 
     EVP_CIPHER_CTX* ctx;
     if (!(ctx = EVP_CIPHER_CTX_new())) {
+        EVP_PKEY_free(pub_key);
         delete[] encrypted_key;
         throw runtime_error("Failed creating new context.");
     }
@@ -33,6 +36,8 @@ void Encryptor::encrypt() {
     const EVP_CIPHER* type = EVP_aes_128_cbc();
 
     if (EVP_SealInit(ctx, type, &encrypted_key, &encrypted_key_len, iv, &pub_key, 1) != 1) {
+        EVP_PKEY_free(pub_key);
+        EVP_CIPHER_CTX_free(ctx);
         delete[] encrypted_key;
         throw runtime_error("Failed initialising the context.");
     }
@@ -98,7 +103,7 @@ void Encryptor::encrypt() {
 }
 
 EVP_PKEY* Encryptor::get_pub_key() {
-    FILE* fp = fopen(m_key_file.c_str(), "r");
+    FILE* fp = fopen(m_key_file.c_str(), "rb");
 
     if (!fp)
         throw runtime_error("Error opening file with public key.");
